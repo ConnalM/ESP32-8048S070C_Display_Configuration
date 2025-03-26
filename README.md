@@ -48,6 +48,63 @@ The configuration includes:
 - Arduino_GFX Library: `https://github.com/moononournation/Arduino_GFX.git`
 - LVGL: `lvgl/lvgl@^9.2.2`
 
+## Setting Up This Project in VSCode
+
+To use this ESP32 display configuration in a VSCode instance, follow these steps:
+
+### Step 1: Clone the Repository
+```bash
+git clone https://github.com/ConnalM/ESP32-8048S070C_Display_Configuration.git
+cd ESP32-8048S070C_Display_Configuration
+```
+
+### Step 2: Install PlatformIO Extension
+1. Open VSCode
+2. Go to Extensions (Ctrl+Shift+X)
+3. Search for "PlatformIO IDE"
+4. Install the extension
+5. Restart VSCode when prompted
+
+### Step 3: Open the Project
+1. In VSCode, select "File > Open Folder"
+2. Navigate to the cloned repository folder
+3. Click "Select Folder"
+
+### Step 4: Let PlatformIO Initialize
+- PlatformIO will automatically detect the project
+- Wait for it to initialize and install dependencies
+- This may take a few minutes the first time
+
+### Step 5: Verify Configuration
+- Check that the `platformio.ini` file has all the correct settings
+- Ensure the custom_build_script.py file is present
+- Verify that the src/main.cpp file contains the display code
+
+### Step 6: Connect Your ESP32 Display
+1. Connect your ESP32-8048S070C display to your computer via USB
+2. Windows should recognize it as a COM port device
+
+### Step 7: Build and Upload
+1. Click the PlatformIO icon in the sidebar
+2. Under "PROJECT TASKS", expand the "esp32-8048S070C" environment
+3. Click "Build" to compile the project
+4. Click "Upload" to flash it to your ESP32 display
+
+### Step 8: Monitor Serial Output (Optional)
+- Click "Monitor" under the project tasks to view serial output
+- This is useful for debugging
+
+### Important Notes
+- No Git submodule setup is required - everything is configured directly in the project files
+- The manual configuration in platformio.ini handles all the board-specific settings
+- If you encounter any compilation errors related to LVGL assembly files, check that the custom_build_script.py is being executed
+
+### Customizing the Display Patterns
+If you want to modify the display patterns:
+1. Edit the pattern functions in src/main.cpp
+2. Add new patterns by creating additional drawing functions
+3. Update the switch statement in the loop() function to include your new patterns
+
 ## Usage Examples
 
 The documentation includes several example projects demonstrating how to use the display with different configurations and UI frameworks.
