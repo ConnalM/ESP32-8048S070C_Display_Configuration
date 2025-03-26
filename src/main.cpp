@@ -41,7 +41,8 @@ Arduino_ESP32RGBPanel *bus = new Arduino_ESP32RGBPanel(
 
 // Create the GFX instance
 Arduino_RGB_Display *gfx = new Arduino_RGB_Display(
-  screenWidth, screenHeight, bus, 0, true, NULL
+  screenWidth, screenHeight, bus, 0, true,
+  NULL, TFT_BL
 );
 
 void setup()
