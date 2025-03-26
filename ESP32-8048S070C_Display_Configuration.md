@@ -558,73 +558,77 @@ If your display is completely non-functional:
 4. Check serial output for any error messages
 5. Gradually add back your custom code while testing at each step
 
-## PlatformIO Board Configuration for ESP32-8048S070C
+## PlatformIO Configuration
 
-### Board Origin and Availability
+### Manual Board Configuration
 
-The ESP32-8048S070C is a 7-inch display module manufactured by Sunton, sometimes referred to as part of the "Cheap Yellow Display" (CYD) family. This board is not included in the standard PlatformIO board registry but can be added through custom board definitions.
+This project uses a direct manual configuration approach in the `platformio.ini` file, which eliminates the need for external Git submodules and simplifies the setup process.
 
-### Board Specifications
-
-- **Microcontroller**: ESP32-S3
-- **Display**: 7-inch 800x480 RGB LCD panel
-- **Display Controller**: ST7262 with 16-bit parallel interface
-- **Touch Controller**: GT911 or XPT2046 (depending on variant)
-- **Connectivity**: USB-C, TF card interface, I2C (JST1.0 4p), Power + Serial (JST1.25 4p)
-- **Important Note**: Different versions (1.1 and 1.3) have different GPIO-to-RGB color mappings
-
-### Adding the Board to PlatformIO
-
-There are two methods to add support for this board:
-
-#### Method 1: Using a Custom Board Repository
-
-1. Create a `boards` directory in your project root
-2. Add the rzeldent/platformio-espressif32-sunton repository as a git submodule:
-
-```bash
-mkdir -p boards
-cd boards
-git submodule add https://github.com/rzeldent/platformio-espressif32-sunton.git
-```
-
-3. PlatformIO will automatically detect the board definitions
-
-#### Method 2: Manual Configuration
-
-If you don't want to use the submodule approach, you can manually configure your `platformio.ini`:
+Here's the complete configuration for the ESP32-8048S070C display:
 
 ```ini
 [env:esp32-8048S070C]
 platform = espressif32
-board = esp32s3box  ; Use a similar ESP32-S3 board as base
+board = esp32s3box
 framework = arduino
-monitor_speed = 115200
-
-; Override board settings
-board_build.mcu = esp32s3
-board_build.f_cpu = 240000000L
-board_build.f_flash = 80000000L
+board_build.arduino.memory_type = qio_opi
 board_build.flash_mode = qio
-board_build.arduino.memory_type = qio_opi  ; Enable PSRAM
+board_build.flash_size = 16MB
+board_build.partitions = default_16MB.csv
+
+; Set CPU frequency
+board_build.f_cpu = 240000000L
 
 ; Library dependencies
-lib_deps = 
+lib_deps =
     https://github.com/moononournation/Arduino_GFX.git
     lvgl/lvgl@^9.2.2
 
-; Build flags
+; Custom build script to handle LVGL configuration
+extra_scripts = custom_build_script.py
+
+; Build flags for LVGL configuration
 build_flags =
-    -Ofast
-    -Wall
-    '-D BOARD_NAME="ESP32-8048S070C"'
-    '-D CORE_DEBUG_LEVEL=ARDUHAL_LOG_LEVEL_INFO'
-    '-D LV_CONF_PATH=${platformio.include_dir}/lv_conf.h'
-    '-D LV_USE_DRAW_SW_ASM=0'
-    '-D LV_USE_VECTOR_GRAPHIC=0'
-    '-D LV_USE_DRAW_SW_HELIUM=0'
-    '-D LV_USE_DRAW_SW_NEON=0'
+    -D LV_USE_DRAW_SW_ASM=0
+    -D LV_USE_VECTOR_GRAPHIC=0
+    -D LV_USE_DRAW_SW_HELIUM=0
 ```
+
+### Key Configuration Elements
+
+1. **Board Selection**: Uses the ESP32-S3-Box as the base board configuration
+2. **Memory Configuration**: Configured for optimal performance with the ESP32-S3
+3. **Flash Settings**: Set to use the full 16MB flash capacity
+4. **Libraries**: Includes the Arduino_GFX library and LVGL 9.2.2
+5. **Custom Build Script**: Handles special LVGL configuration needs
+6. **Build Flags**: Disables assembly optimizations that can cause issues with the ESP32-S3
+
+### Custom Build Script
+
+The `custom_build_script.py` file is used to modify the build process to exclude certain assembly files that may cause compilation issues:
+
+```python
+Import("env")
+
+def modify_build_flags(env):
+    print("Applying custom build configuration to exclude assembly files...")
+    
+    # Modify build flags to exclude assembly files
+    env.Append(CPPDEFINES=[
+        ("LV_USE_DRAW_SW_ASM", "0"),
+        ("LV_USE_VECTOR_GRAPHIC", "0"),
+        ("LV_USE_DRAW_SW_HELIUM", "0")
+    ])
+    
+    # Add a build hook to exclude assembly files during compilation
+    env.AddBuildMiddleware(lambda node: None if str(node).endswith(".S") else node, "*")
+    
+    print("Custom build configuration applied successfully.")
+
+modify_build_flags(env)
+```
+
+This script ensures that problematic assembly files are excluded during compilation, which is necessary for compatibility with the ESP32-S3.
 
 ### Required Pin Configuration
 
@@ -667,7 +671,6 @@ The pin configuration must match the hardware connections as shown in the main.c
    -D LV_USE_DRAW_SW_ASM=0
    -D LV_USE_VECTOR_GRAPHIC=0
    -D LV_USE_DRAW_SW_HELIUM=0
-   -D LV_USE_DRAW_SW_NEON=0
    ```
 
 3. **Version Differences**: If you experience display color issues, check which version of the board you have (1.1 or 1.3) as they have different GPIO-to-RGB mappings.

@@ -26,19 +26,22 @@ This repository provides detailed documentation for configuring and using the ES
 
 ### PlatformIO Setup
 
-Add support for the ESP32-8048S070C board using one of two methods:
+This project uses a manual configuration approach for the ESP32-8048S070C board, which eliminates the need for external Git submodules and simplifies the setup process.
 
-#### Method 1: Using a Custom Board Repository
+#### Manual Configuration
 
-```bash
-mkdir -p boards
-cd boards
-git submodule add https://github.com/rzeldent/platformio-espressif32-sunton.git
-```
+The project is configured directly in the `platformio.ini` file with all necessary settings for the ESP32-S3 board and display. This approach offers several advantages:
 
-#### Method 2: Manual Configuration
+- **Simplified Setup**: No need to clone additional repositories
+- **Better Portability**: All configuration is contained within the project
+- **Easier Maintenance**: Direct control over all build parameters
+- **Improved Compatibility**: Avoids potential conflicts with board package updates
 
-Configure your `platformio.ini` as detailed in the documentation file.
+The configuration includes:
+- Board-specific settings for the ESP32-S3
+- Memory configuration for optimal performance
+- Build flags for display compatibility
+- Custom build script to handle LVGL configuration
 
 ### Required Libraries
 

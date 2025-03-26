@@ -22,11 +22,15 @@
 #define TFT_B2 6
 #define TFT_B3 5
 #define TFT_B4 4
-#define TFT_BL 2
+#define CUSTOM_TFT_BL 2  // Renamed to avoid conflict with ESP32-S3-Box definition
 
 // Screen dimensions
-#define screenWidth 800
-#define screenHeight 480
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 480
+
+// Store color constants in PROGMEM to save RAM
+const PROGMEM uint16_t colorBars[] = {RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE};
+const PROGMEM uint16_t circleColors[] = {RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE};
 
 // Create the RGB panel with the correct timing parameters
 Arduino_ESP32RGBPanel *bus = new Arduino_ESP32RGBPanel(
@@ -41,9 +45,21 @@ Arduino_ESP32RGBPanel *bus = new Arduino_ESP32RGBPanel(
 
 // Create the GFX instance
 Arduino_RGB_Display *gfx = new Arduino_RGB_Display(
-  screenWidth, screenHeight, bus, 0, true,
-  NULL, TFT_BL
+  SCREEN_WIDTH, SCREEN_HEIGHT, bus, 0, true,
+  NULL, CUSTOM_TFT_BL  // Use our custom backlight pin
 );
+
+// Pattern counter
+uint8_t currentPattern = 0;
+unsigned long lastPatternChange = 0;
+const uint16_t patternDuration = 5000; // 5 seconds per pattern
+
+// Function prototypes
+void drawColorBars();
+void drawGradient();
+void drawCheckerboard();
+void drawConcentricCircles();
+void drawPatternName(const char* name, uint16_t color);
 
 void setup()
 {
@@ -53,29 +69,148 @@ void setup()
   gfx->begin();
   
   // Turn on the backlight
-  pinMode(TFT_BL, OUTPUT);
-  digitalWrite(TFT_BL, HIGH);
+  pinMode(CUSTOM_TFT_BL, OUTPUT);
+  digitalWrite(CUSTOM_TFT_BL, HIGH);
 
   // Clear the screen
   gfx->fillScreen(BLACK);
   
-  // Draw a test pattern
-  int barWidth = screenWidth / 8;
-  uint16_t colors[8] = {RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, WHITE, ORANGE};
+  // Draw initial pattern
+  drawColorBars();
   
-  for (int i = 0; i < 8; i++) {
-    int x = i * barWidth;
-    gfx->fillRect(x, 0, barWidth, screenHeight, colors[i]);
-    
-    // Draw position text
-    gfx->setTextColor(BLACK);
-    gfx->setTextSize(3);
-    gfx->setCursor(x + 10, screenHeight / 2);
-    gfx->print(x);
-  }
+  // Initialize pattern change timer
+  lastPatternChange = millis();
 }
 
 void loop()
 {
-  delay(1000);
+  // Check if it's time to change patterns
+  if (millis() - lastPatternChange > patternDuration) {
+    // Move to next pattern
+    currentPattern = (currentPattern + 1) % 4;
+    
+    // Clear screen
+    gfx->fillScreen(BLACK);
+    
+    // Draw the new pattern
+    switch (currentPattern) {
+      case 0:
+        drawColorBars();
+        break;
+      case 1:
+        drawGradient();
+        break;
+      case 2:
+        drawCheckerboard();
+        break;
+      case 3:
+        drawConcentricCircles();
+        break;
+    }
+    
+    // Update timer
+    lastPatternChange = millis();
+  }
+}
+
+// Helper function to draw pattern name - reduces code duplication
+void drawPatternName(const char* name, uint16_t color = WHITE) {
+  gfx->setTextColor(color);
+  gfx->setTextSize(2);
+  gfx->setCursor(10, 10);
+  gfx->print(name);
+}
+
+// Pattern 1: Color Bars
+void drawColorBars() {
+  const uint16_t barWidth = SCREEN_WIDTH / 8;
+  
+  for (uint8_t i = 0; i < 8; i++) {
+    const uint16_t x = i * barWidth;
+    // Get color from PROGMEM
+    const uint16_t color = pgm_read_word(&colorBars[i]);
+    gfx->fillRect(x, 0, barWidth, SCREEN_HEIGHT, color);
+    
+    // Draw position text
+    gfx->setTextColor(BLACK);
+    gfx->setTextSize(3);
+    gfx->setCursor(x + 10, SCREEN_HEIGHT / 2);
+    gfx->print(x);
+  }
+  
+  // Draw pattern name
+  drawPatternName("Pattern 1: Color Bars");
+}
+
+// Pattern 2: Gradient - optimized to use fewer calculations
+void drawGradient() {
+  // Pre-calculate values for better performance
+  const uint16_t halfHeight = SCREEN_HEIGHT / 2;
+  
+  // Draw horizontal gradient (red to blue) with fewer calculations
+  for (uint16_t x = 0; x < SCREEN_WIDTH; x++) {
+    // Use bit shifting for faster calculation (multiply by 255 and divide by SCREEN_WIDTH)
+    uint8_t r = ((SCREEN_WIDTH - x) * 255) / SCREEN_WIDTH;
+    uint8_t b = (x * 255) / SCREEN_WIDTH;
+    uint16_t color = gfx->color565(r, 0, b);
+    
+    gfx->drawFastVLine(x, 0, halfHeight, color);
+  }
+  
+  // Draw vertical gradient (green to yellow) with fewer calculations
+  for (uint16_t y = halfHeight; y < SCREEN_HEIGHT; y++) {
+    // Use bit shifting for faster calculation
+    uint8_t g = ((SCREEN_HEIGHT - y) * 255) / (SCREEN_HEIGHT - halfHeight);
+    uint8_t r = ((y - halfHeight) * 255) / (SCREEN_HEIGHT - halfHeight);
+    uint16_t color = gfx->color565(r, g, 0);
+    
+    gfx->drawFastHLine(0, y, SCREEN_WIDTH, color);
+  }
+  
+  // Draw pattern name
+  drawPatternName("Pattern 2: Gradient");
+}
+
+// Pattern 3: Checkerboard - optimized to reduce calculations
+void drawCheckerboard() {
+  const uint8_t squareSize = 40;
+  bool isWhite;
+  
+  // Pre-calculate row count and column count
+  const uint8_t rows = (SCREEN_HEIGHT + squareSize - 1) / squareSize;
+  const uint8_t cols = (SCREEN_WIDTH + squareSize - 1) / squareSize;
+  
+  // Draw checkerboard with fewer conditional checks
+  for (uint8_t y = 0; y < rows; y++) {
+    isWhite = y & 1; // Faster than y % 2
+    
+    for (uint8_t x = 0; x < cols; x++) {
+      gfx->fillRect(x * squareSize, y * squareSize, 
+                   squareSize, squareSize, 
+                   isWhite ? WHITE : BLACK);
+      isWhite = !isWhite;
+    }
+  }
+  
+  // Draw pattern name
+  drawPatternName("Pattern 3: Checkerboard", RED);
+}
+
+// Pattern 4: Concentric Circles - optimized to reduce calculations
+void drawConcentricCircles() {
+  const uint16_t centerX = SCREEN_WIDTH / 2;
+  const uint16_t centerY = SCREEN_HEIGHT / 2;
+  const uint16_t maxRadius = min(SCREEN_WIDTH, SCREEN_HEIGHT) / 2;
+  const uint8_t step = 20; // Distance between circles
+  
+  // Draw from largest to smallest for better visual effect
+  for (uint16_t r = maxRadius; r > 0; r -= step) {
+    // Calculate color index with faster modulo (for powers of 2, use bitwise AND)
+    const uint8_t colorIndex = ((maxRadius - r) / step) % 6;
+    const uint16_t color = pgm_read_word(&circleColors[colorIndex]);
+    gfx->fillCircle(centerX, centerY, r, color);
+  }
+  
+  // Draw pattern name
+  drawPatternName("Pattern 4: Concentric Circles");
 }
