@@ -1,56 +1,62 @@
-# ESP32 Smart Display Project
+# ESP32-8048S070C Display Configuration
 
-This project demonstrates how to use the ESP32 Smart Display (Sunton Smart Display / CYD - Cheap Yellow Display) with LVGL for creating graphical user interfaces.
+Comprehensive documentation and configuration guide for the ESP32-8048S070C display module (part of the "Cheap Yellow Display" family) with PlatformIO and LVGL.
 
-## Hardware Requirements
+## About This Project
 
-- ESP32 Smart Display board (e.g., ESP32-2432S024R)
-- USB cable for programming
+This repository provides detailed documentation for configuring and using the ESP32-8048S070C display module, a 7-inch 800x480 RGB LCD panel with an integrated ESP32-S3 microcontroller. The documentation covers hardware specifications, PlatformIO setup, pin configurations, and optimization tips.
 
-## Software Requirements
+## Hardware Specifications
 
-- PlatformIO IDE
-- ESP32 Arduino framework
-- LVGL library (automatically installed as a dependency)
+- **Microcontroller**: ESP32-S3
+- **Display**: 7-inch 800x480 RGB LCD panel
+- **Display Controller**: ST7262 with 16-bit parallel interface
+- **Touch Controller**: GT911 or XPT2046 (depending on variant)
+- **Connectivity**: USB-C, TF card interface, I2C (JST1.0 4p), Power + Serial (JST1.25 4p)
 
-## Project Structure
+## Documentation Contents
 
-- `platformio.ini`: PlatformIO project configuration
-- `boards/`: Board definitions for Sunton Smart Display boards (git submodule)
-- `include/lv_conf.h`: LVGL configuration file
-- `src/main.cpp`: Main application code
+- **PlatformIO Board Configuration**: How to add and configure the ESP32-8048S070C in PlatformIO
+- **Hardware Connection Information**: Pin mappings and physical setup details
+- **Performance Optimization Tips**: Memory management and rendering performance advice
+- **Example Projects**: Sample code for different use cases
+- **Troubleshooting Guide**: Solutions for common display and compilation issues
 
-## Installation
+## Getting Started
 
-1. Clone this repository with submodules:
-   ```
-   git clone --recurse-submodules https://github.com/yourusername/ESP32_SmartDisplay_Project.git
-   ```
+### PlatformIO Setup
 
-2. Open the project in PlatformIO IDE
+Add support for the ESP32-8048S070C board using one of two methods:
 
-3. Build and upload to your ESP32 Smart Display board
+#### Method 1: Using a Custom Board Repository
 
-## Usage
+```bash
+mkdir -p boards
+cd boards
+git submodule add https://github.com/rzeldent/platformio-espressif32-sunton.git
+```
 
-The example code displays a simple "Hello ESP32 Smart Display!" message in the center of the screen. You can modify the code in `src/main.cpp` to create your own user interface using LVGL.
+#### Method 2: Manual Configuration
 
-## Customization
+Configure your `platformio.ini` as detailed in the documentation file.
 
-- Change the display rotation in `src/main.cpp` by uncommenting one of the rotation lines
-- Modify LVGL settings in `include/lv_conf.h`
-- Choose a different board by changing the board name in `platformio.ini`
+### Required Libraries
 
-## Supported Boards
+- Arduino_GFX Library: `https://github.com/moononournation/Arduino_GFX.git`
+- LVGL: `lvgl/lvgl@^9.2.2`
 
-This project supports various Sunton Smart Display boards, including:
-- ESP32-2432S024R/C/N
-- ESP32-2432S028R/C
-- ESP32-3248S035R/C
-- ESP32-8048S070N/C
+## Usage Examples
 
-And many more as defined in the board definitions submodule.
+The documentation includes several example projects demonstrating how to use the display with different configurations and UI frameworks.
+
+## Troubleshooting
+
+A comprehensive troubleshooting guide is included to help resolve common issues with display output, compilation, and performance.
+
+## Contributing
+
+Contributions to improve the documentation or add more examples are welcome. Please feel free to submit pull requests or open issues for any problems or suggestions.
 
 ## License
 
-This project is open source and available under the MIT License.
+This documentation is provided under the MIT License.
