@@ -64,22 +64,37 @@ void drawPatternName(const char* name, uint16_t color);
 void setup()
 {
   Serial.begin(115200);
+  delay(500); // Short delay to ensure serial is ready
+  
+  Serial.println("\n\n----- ESP32-8048S070C Display Test -----");
+  Serial.println("Board: ESP32-8048S070C");
+  Serial.println("Resolution: 800x480");
+  Serial.println("Initializing display...");
   
   // Initialize the display
+  unsigned long startTime = millis();
   gfx->begin();
+  unsigned long initTime = millis() - startTime;
+  Serial.print("Display initialized in ");
+  Serial.print(initTime);
+  Serial.println(" ms");
   
   // Turn on the backlight
   pinMode(CUSTOM_TFT_BL, OUTPUT);
   digitalWrite(CUSTOM_TFT_BL, HIGH);
+  Serial.println("Backlight turned ON");
 
   // Clear the screen
   gfx->fillScreen(BLACK);
+  Serial.println("Screen cleared");
   
   // Draw initial pattern
+  Serial.println("Drawing initial pattern: Color Bars");
   drawColorBars();
   
   // Initialize pattern change timer
   lastPatternChange = millis();
+  Serial.println("Setup complete, entering main loop");
 }
 
 void loop()
@@ -93,20 +108,35 @@ void loop()
     gfx->fillScreen(BLACK);
     
     // Draw the new pattern
+    Serial.print("Changing to pattern ");
+    Serial.print(currentPattern);
+    Serial.print(": ");
+    
+    unsigned long startTime = millis();
+    
     switch (currentPattern) {
       case 0:
+        Serial.println("Color Bars");
         drawColorBars();
         break;
       case 1:
+        Serial.println("Gradient");
         drawGradient();
         break;
       case 2:
+        Serial.println("Checkerboard");
         drawCheckerboard();
         break;
       case 3:
+        Serial.println("Concentric Circles");
         drawConcentricCircles();
         break;
     }
+    
+    unsigned long drawTime = millis() - startTime;
+    Serial.print("Pattern drawn in ");
+    Serial.print(drawTime);
+    Serial.println(" ms");
     
     // Update timer
     lastPatternChange = millis();
@@ -123,6 +153,7 @@ void drawPatternName(const char* name, uint16_t color = WHITE) {
 
 // Pattern 1: Color Bars
 void drawColorBars() {
+  Serial.println("Drawing color bars pattern");
   const uint16_t barWidth = SCREEN_WIDTH / 8;
   
   for (uint8_t i = 0; i < 8; i++) {
@@ -140,10 +171,12 @@ void drawColorBars() {
   
   // Draw pattern name
   drawPatternName("Pattern 1: Color Bars");
+  Serial.println("Color bars pattern complete");
 }
 
 // Pattern 2: Gradient - optimized to use fewer calculations
 void drawGradient() {
+  Serial.println("Drawing gradient pattern");
   // Pre-calculate values for better performance
   const uint16_t halfHeight = SCREEN_HEIGHT / 2;
   
@@ -169,10 +202,12 @@ void drawGradient() {
   
   // Draw pattern name
   drawPatternName("Pattern 2: Gradient");
+  Serial.println("Gradient pattern complete");
 }
 
 // Pattern 3: Checkerboard - optimized to reduce calculations
 void drawCheckerboard() {
+  Serial.println("Drawing checkerboard pattern");
   const uint8_t squareSize = 40;
   bool isWhite;
   
@@ -194,10 +229,12 @@ void drawCheckerboard() {
   
   // Draw pattern name
   drawPatternName("Pattern 3: Checkerboard", RED);
+  Serial.println("Checkerboard pattern complete");
 }
 
 // Pattern 4: Concentric Circles - optimized to reduce calculations
 void drawConcentricCircles() {
+  Serial.println("Drawing concentric circles pattern");
   const uint16_t centerX = SCREEN_WIDTH / 2;
   const uint16_t centerY = SCREEN_HEIGHT / 2;
   const uint16_t maxRadius = min(SCREEN_WIDTH, SCREEN_HEIGHT) / 2;
@@ -213,4 +250,5 @@ void drawConcentricCircles() {
   
   // Draw pattern name
   drawPatternName("Pattern 4: Concentric Circles");
+  Serial.println("Concentric circles pattern complete");
 }
